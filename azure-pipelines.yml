@@ -1,0 +1,34 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '6.x.x'  # Specify your .NET version, e.g., 6.0.x
+
+- script: |
+    dotnet tool install --global SpecFlow.Plus.LivingDoc.CLI
+  displayName: 'Install SpecFlow+ LivingDoc CLI'
+
+- script: |
+    dotnet restore
+  displayName: 'Restore NuGet packages'
+
+- script: |
+    dotnet test --logger "trx;LogFileName=TestResults.trx" --results-directory TestResults
+  displayName: 'Run tests and generate .trx file'
+
+- script: |
+    livingdoc test-assembly $(Build.SourcesDirectory)\APIEndPointWireMockExample\bin\Debug\net6.0\APIEndPointWireMockExample.dll --test-result $(Build.SourcesDirectory)\APIEndPointWireMockExample\TestResults\TestResults.trx -t $(Build.SourcesDirectory)\APIEndPointWireMockExample\TestResults\TestExecution.json
+  displayName: 'Generate LivingDoc HTML report'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(Build.SourcesDirectory)\APIEndPointWireMockExample\TestResults\LivingDoc.html'
+    artifactName: 'LivingDoc'
+    publishLocation: 'Container'
+  displayName: 'Publish LivingDoc HTML report as a build artifact'
