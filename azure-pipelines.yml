@@ -1,8 +1,7 @@
-variables:
-  System.Debug: true
-  
 trigger:
-- main
+  branches:
+    include:
+      - master
 
 pool:
   vmImage: 'windows-latest'
